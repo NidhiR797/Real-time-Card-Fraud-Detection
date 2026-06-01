@@ -2,7 +2,7 @@
 
 A prototype card-issuer fraud platform exploring fraud as a multi-persona product problem.
 
-**Live demo:** https://NidhiR797.github.io/aegis_fraud_platform_v2.html
+**Live demo:** https://NidhiR797.github.io/aegis_fraud_platform_v2.index.html
 
 ## Personas
 - **Fraud Analyst** — case review, SLA tracking
