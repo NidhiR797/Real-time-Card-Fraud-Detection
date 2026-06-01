@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aegis — Real-time Card Fraud Detection</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 1.5rem 0 0.75rem;
+      color: #f1f5f9;
+    }
+    p { margin-bottom: 1rem; color: #cbd5e1; }
+    ul { margin-left: 1.5rem; margin-bottom: 1rem; color: #cbd5e1; }
+    li { margin-bottom: 0.4rem; }
+    .cta {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.9rem 2rem;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+    }
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .footer a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛡️ Aegis</h1>
+    <p class="subtitle">Real-time Card Fraud Detection Platform</p>
+
+    <p>
+      Aegis is an end-to-end fraud detection system that analyzes card transactions
+      in real time, flags suspicious activity, and gives investigators an interactive
+      dashboard to explore alerts, patterns, and model decisions.
+    </p>
+
+    <h2>Key Features</h2>
+    <ul>
+      <li>Real-time transaction scoring with ML-based risk models</li>
+      <li>Interactive dashboard for monitoring alerts and trends</li>
+      <li>Explainable predictions to support investigator decisions</li>
+      <li>Visual analytics on transaction patterns and fraud hotspots</li>
+    </ul>
+
+    <h2>Try the Demo</h2>
+    <p>
+      Click below to launch the interactive dashboard and explore the platform.
+    </p>
+
+    <a class="cta" href="aegis_fraud_platform_v2.index.html">Launch Dashboard →</a>
+
+    <div class="footer">
+      View the source on
+      <a href="https://github.com/NidhiR797/Real-time-Card-Fraud-Detection" target="_blank">GitHub</a>.
+    </div>
+  </div>
+</body>
+</html>
