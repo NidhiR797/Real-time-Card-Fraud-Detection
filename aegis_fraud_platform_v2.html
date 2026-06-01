@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEGIS — Real-Time Card Fraud Decision Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:#0a0c10; --bg2:#111318; --bg3:#181c24; --bg4:#1e2330;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --text:#e8eaf0; --text2:#8892a4; --text3:#4a5568;
+  --green:#22c55e; --green-bg:rgba(34,197,94,0.1); --green-border:rgba(34,197,94,0.3);
+  --amber:#f59e0b; --amber-bg:rgba(245,158,11,0.1); --amber-border:rgba(245,158,11,0.3);
+  --red:#ef4444; --red-bg:rgba(239,68,68,0.1); --red-border:rgba(239,68,68,0.3);
+  --blue:#3b82f6; --blue-bg:rgba(59,130,246,0.1); --blue-border:rgba(59,130,246,0.3);
+  --purple:#a855f7; --purple-bg:rgba(168,85,247,0.1);
+  --cyan:#06b6d4; --cyan-bg:rgba(6,182,212,0.08);
+  --font:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:6px; --rl:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px} body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button,input,select{font-family:var(--font);cursor:pointer}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:224px;min-width:224px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-row{display:flex;align-items:center;gap:8px}
+.logo-icon{width:28px;height:28px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff}
+.logo-name{font-weight:600;font-size:15px;letter-spacing:.4px}
+.logo-ver{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+
+/* PERSONA SWITCHER */
+.persona-zone{padding:10px 12px;border-bottom:1px solid var(--border)}
+.persona-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:600;margin-bottom:6px}
+.persona-select{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:var(--r);font-size:11.5px;outline:none}
+.persona-desc{font-size:10px;color:var(--text2);margin-top:5px;line-height:1.4;padding:6px 8px;background:var(--bg4);border-radius:var(--r)}
+
+.nav-section{padding:10px 10px 4px}
+.nav-group-label{font-size:9px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);color:var(--text2);font-size:12px;border:none;background:none;width:100%;text-align:left;transition:all .15s;position:relative}
+.nav-item:hover{background:var(--bg4);color:var(--text)}
+.nav-item.active{background:var(--red-bg);color:var(--red)}
+.nav-item .ti{font-size:14px}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:10px;font-family:var(--mono)}
+.nav-badge.amber{background:var(--amber);color:#000}
+.nav-badge.blue{background:var(--blue)}
+.nav-badge.gray{background:var(--bg4);border:1px solid var(--border2);color:var(--text3)}
+
+.sidebar-foot{margin-top:auto;padding:10px 12px;border-top:1px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r)}
+.user-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.user-info .name{font-size:12px;font-weight:500}
+.user-info .role{font-size:10px;color:var(--text3)}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;padding:0 22px;height:50px;background:var(--bg2);border-bottom:1px solid var(--border);gap:10px;flex-shrink:0;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:13.5px;font-weight:500}
+.topbar-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-left:6px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.live-txt{font-size:9px;font-family:var(--mono);color:var(--green);letter-spacing:.5px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+.scenario-pill{display:flex;align-items:center;gap:5px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);padding:4px 10px;border-radius:20px;font-size:10px;font-weight:500;cursor:pointer}
+.tbtn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:var(--r);font-size:11px;display:flex;align-items:center;gap:4px}
+.tbtn:hover{border-color:var(--border2);color:var(--text)}
+
+/* CONTENT */
+.content{padding:18px 22px;flex:1}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl)}
+.card-body{padding:15px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:13px 14px}
+.kpi-lbl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;font-weight:500}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--mono);line-height:1}
+.kpi-d{font-size:10px;margin-top:4px;font-family:var(--mono)}
+.kpi-d.up{color:var(--green)}.kpi-d.dn{color:var(--red)}.kpi-d.nt{color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.b-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.b-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.b-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.b-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.b-purple{background:var(--purple-bg);color:var(--purple)}
+.b-gray{background:var(--bg4);color:var(--text2);border:1px solid var(--border)}
+
+/* SCORE BAR */
+.sbar-wrap{display:flex;align-items:center;gap:7px}
+.sbar{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;max-width:80px}
+.sbar-fill{height:100%;border-radius:2px}
+.sbar-val{font-family:var(--mono);font-size:11px;font-weight:500;min-width:24px;text-align:right}
+
+/* TX TABLE */
+.tx-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 9px;border-radius:14px;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.chip:hover,.chip.on{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.chip.on.red{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.chip.on.amber{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.chip.on.green{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9.5px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:8px 11px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.tbl td{padding:8px 11px;border-bottom:1px solid var(--border);font-size:11.5px;vertical-align:middle;white-space:nowrap}
+.tbl tr:hover td{background:var(--bg3);cursor:pointer}
+.tbl tr.nr td{animation:rowIn .35s ease}
+@keyframes rowIn{from{opacity:0;background:rgba(59,130,246,.08)}to{opacity:1;background:transparent}}
+.mono{font-family:var(--mono)}.muted{color:var(--text2)}.bold{font-weight:500}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;top:0;right:0;width:560px;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);z-index:100;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;display:flex;flex-direction:column}
+.detail-panel.open{transform:translateX(0)}
+.dp-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1;flex-shrink:0}
+.dp-close{background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:26px;height:26px;border-radius:var(--r);display:flex;align-items:center;justify-content:center}
+.dp-body{padding:18px;flex:1}
+.ds{margin-bottom:18px}
+.ds-title{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.sig-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.sig-row:last-child{border-bottom:none}
+.sig-name{font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px}
+.dec-box{border-radius:var(--rl);padding:13px 15px;margin-bottom:14px}
+.dec-approved{background:var(--green-bg);border:1px solid var(--green-border)}
+.dec-declined{background:var(--red-bg);border:1px solid var(--red-border)}
+.dec-challenge{background:var(--amber-bg);border:1px solid var(--amber-border)}
+.dec-review{background:var(--blue-bg);border:1px solid var(--blue-border)}
+.dec-blocked{background:var(--purple-bg);border:1px solid rgba(168,85,247,.4)}
+.dec-label{font-size:17px;font-weight:600;display:flex;align-items:center;gap:7px}
+.dec-rationale{font-size:11px;margin-top:7px;line-height:1.6;opacity:.85}
+.fbar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.fbar-label{font-size:10.5px;color:var(--text2);min-width:150px}
+.fbar{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.fbar-fill{height:100%;border-radius:3px}
+.fbar-fill.pos{background:var(--green)}.fbar-fill.neg{background:var(--red)}.fbar-fill.warn{background:var(--amber)}
+.fbar-wt{font-size:10px;font-family:var(--mono);color:var(--text2);min-width:28px;text-align:right}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:1px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:12px}
+.tl-dot{position:absolute;left:-18px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2)}
+.tl-dot.g{background:var(--green);border-color:var(--green)}.tl-dot.r{background:var(--red);border-color:var(--red)}.tl-dot.a{background:var(--amber);border-color:var(--amber)}
+.tl-t{font-size:9.5px;color:var(--text3);font-family:var(--mono)}
+.tl-d{font-size:11.5px;margin-top:2px}
+.msg-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:13px 15px;margin-bottom:8px}
+.msg-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:600;margin-bottom:5px}
+.msg-int{border-left:2px solid var(--amber)}.msg-ext{border-left:2px solid var(--blue)}
+
+/* RULES WORKBENCH */
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rule-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:13px 15px}
+.rule-title{font-size:12px;font-weight:500;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.slider-wrap{margin:7px 0}
+.slider-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:4px}
+.slider-val{font-family:var(--mono);color:var(--text)}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--bg2)}
+.toggle{position:relative;width:30px;height:17px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;cursor:pointer;inset:0;background:var(--bg4);border-radius:9px;transition:.2s;border:1px solid var(--border2)}
+.tslider:before{position:absolute;content:'';height:11px;width:11px;left:2px;bottom:2px;background:var(--text3);border-radius:50%;transition:.2s}
+.toggle input:checked+.tslider{background:var(--red-bg);border-color:var(--red)}
+.toggle input:checked+.tslider:before{transform:translateX(13px);background:var(--red)}
+.toggle-row{display:flex;align-items:center;gap:7px;margin:7px 0}
+.impact-box{background:var(--bg4);border-radius:var(--r);padding:9px 11px;margin-top:9px}
+.impact-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:4px}
+.impact-row:last-child{margin-bottom:0}
+.impact-lbl{color:var(--text2)}
+.impact-val{font-family:var(--mono);font-weight:500}
+.ich{font-size:10px;font-family:var(--mono);margin-left:4px}
+.ich.pos{color:var(--green)}.ich.neg{color:var(--red)}
+
+/* QUEUE */
+.q-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:13px 15px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+.q-item:hover{border-color:var(--border2)}
+.q-item.crit{border-left:3px solid var(--red)}.q-item.high{border-left:3px solid var(--amber)}.q-item.med{border-left:3px solid var(--blue)}
+.q-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.q-title{font-weight:500;font-size:12px;flex:1}
+.q-meta{display:flex;gap:14px;font-size:10.5px;color:var(--text2);flex-wrap:wrap}
+.q-meta-i{display:flex;align-items:center;gap:4px}
+.q-acts{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.act-btn{background:var(--bg4);border:1px solid var(--border);color:var(--text2);padding:4px 9px;border-radius:var(--r);font-size:10px;cursor:pointer;transition:all .15s}
+.act-btn:hover{border-color:var(--border2);color:var(--text)}
+.act-btn.fraud{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.act-btn.genuine{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.act-btn.block{background:var(--purple-bg);border-color:rgba(168,85,247,.4);color:var(--purple)}
+
+/* CHARTS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:14px}
+.chart-title{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+
+/* PIPELINE */
+.pipe-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.pf-step{text-align:center}
+.pf-box{padding:9px 5px;border-radius:var(--r);border:1px solid var(--border);font-size:9.5px;font-weight:500;margin-bottom:3px}
+.pf-box.en{background:var(--cyan-bg);border-color:rgba(6,182,212,.3);color:var(--cyan)}
+.pf-box.ru{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.pf-box.ml{background:var(--purple-bg);border-color:rgba(168,85,247,.3);color:var(--purple)}
+.pf-box.po{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.pf-box.fr{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.pf-box.ok{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.pf-box.fl{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.pf-box.ch{background:var(--bg4);border-color:var(--border2);color:var(--text2)}
+.pf-lbl{font-size:8.5px;display:block;text-transform:uppercase;letter-spacing:.4px;opacity:.7;margin-bottom:1px}
+.pf-sub{font-size:9px;color:var(--text3);margin-top:2px;line-height:1.3}
+
+/* SUPPORT VIEW */
+.support-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.support-issue{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px}
+.support-resolved{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px}
+.support-challenge{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px}
+.step-list{counter-reset:steps}
+.step-item{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;font-family:var(--mono);flex-shrink:0;margin-top:1px}
+.script-box{background:var(--bg4);border-left:2px solid var(--blue);border-radius:0 var(--r) var(--r) 0;padding:10px 12px;font-size:11.5px;line-height:1.6;font-style:italic;color:var(--text);margin-top:6px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);width:460px;max-height:80vh;overflow-y:auto}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-body{padding:18px}
+.sc-opt{padding:11px 13px;border:1px solid var(--border);border-radius:var(--rl);margin-bottom:7px;cursor:pointer;transition:all .15s}
+.sc-opt:hover{border-color:var(--border2);background:var(--bg3)}
+.sc-opt.on{border-color:var(--amber-border);background:var(--amber-bg)}
+.sc-opt-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.sc-opt-desc{font-size:10.5px;color:var(--text2)}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--bg2);border:1px solid var(--amber-border);border-radius:var(--rl);padding:11px 14px;z-index:300;transform:translateY(90px);opacity:0;transition:all .28s;max-width:260px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-title{font-size:12px;font-weight:500;color:var(--amber);margin-bottom:2px}
+.toast-msg{font-size:10.5px;color:var(--text2)}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mcc-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.mcc-lbl{font-size:11px;color:var(--text2);min-width:130px}
+.mcc-bar{flex:1;height:5px;background:var(--bg4);border-radius:3px}
+.mcc-fill{height:100%;border-radius:3px;background:var(--red)}
+.mcc-pct{font-size:10px;font-family:var(--mono);color:var(--text3);min-width:30px}
+.tabs{display:flex;gap:1px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.tab{padding:7px 13px;font-size:12px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:all .15s}
+.tab:hover{color:var(--text)}.tab.active{color:var(--text);border-bottom-color:var(--red)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<h2 class="sr-only">AEGIS — Card Issuer Fraud Decision Platform with role-based views for Analyst, Strategy Manager, Risk Leader, and Customer Support</h2>
+
+<div class="app">
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-row">
+      <div class="logo-icon">Æ</div>
+      <div><div class="logo-name">AEGIS</div><div class="logo-ver">v4.2 · PROD-IN</div></div>
+    </div>
+  </div>
+
+  <div class="persona-zone">
+    <div class="persona-label">Active Persona</div>
+    <select class="persona-select" id="personaSel" onchange="switchPersona(this.value)">
+      <option value="analyst">Fraud Analyst</option>
+      <option value="manager">Strategy Manager</option>
+      <option value="leader">Risk Leader</option>
+      <option value="support">Customer Support</option>
+    </select>
+    <div class="persona-desc" id="personaDesc">Investigates individual transactions, works the alert queue, calls customers.</div>
+  </div>
+
+  <div class="nav-section" id="navSection"></div>
+
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-av" id="userAv" style="background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue)">PR</div>
+      <div class="user-info"><div class="name" id="userName">Priya Rajan</div><div class="role" id="userRole">Sr. Fraud Analyst</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="pageTitle">Live Authorization Feed</div>
+      <div class="topbar-sub" id="pageSub">Real-time decisioning · <span id="txRate">2,847</span> tx/min</div>
+    </div>
+    <div class="live-dot"></div><div class="live-txt">LIVE</div>
+    <div class="topbar-right">
+      <div class="scenario-pill" onclick="openScenarioModal()">
+        <i class="ti ti-bolt" style="font-size:10px"></i>
+        <span id="scenLabel">Normal Operations</span>
+        <i class="ti ti-chevron-down" style="font-size:10px"></i>
+      </div>
+      <button class="tbtn"><i class="ti ti-download" style="font-size:12px"></i> Export</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════ ANALYST PAGES ══════════ -->
+
+    <!-- A1: Live Feed -->
+    <div id="page-a-feed" class="page active">
+      <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr)">
+        <div class="kpi"><div class="kpi-lbl">Approval Rate</div><div class="kpi-val" style="color:var(--green)" id="kv-approval">94.2%</div><div class="kpi-d nt">↔ −0.1pp vs yesterday</div></div>
+        <div class="kpi"><div class="kpi-lbl">Fraud Declines</div><div class="kpi-val" style="color:var(--red)" id="kv-decline">3.1%</div><div class="kpi-d dn">↑ elevated</div></div>
+        <div class="kpi"><div class="kpi-lbl">Step-up Rate</div><div class="kpi-val" style="color:var(--amber)" id="kv-stepup">1.8%</div><div class="kpi-d nt">Stable</div></div>
+        <div class="kpi"><div class="kpi-lbl">False Pos. Est.</div><div class="kpi-val" style="color:var(--amber)">0.7%</div><div class="kpi-d up">↓ improving</div></div>
+        <div class="kpi"><div class="kpi-lbl">My Queue</div><div class="kpi-val" style="color:var(--blue)">12</div><div class="kpi-d dn">↑ 3 new today</div></div>
+        <div class="kpi"><div class="kpi-lbl">SLA Breach Risk</div><div class="kpi-val" style="color:var(--red)">2</div><div class="kpi-d dn">Action needed</div></div>
+      </div>
+      <div class="tx-filters" id="txFilters">
+        <span style="font-size:9px;color:var(--text3);align-self:center;margin-right:3px">FILTER:</span>
+        <span class="chip on" onclick="filterTx('all',this)">All</span>
+        <span class="chip" onclick="filterTx('approved',this)"><i class="ti ti-check" style="font-size:10px"></i> Approved</span>
+        <span class="chip" onclick="filterTx('declined',this)"><i class="ti ti-x" style="font-size:10px"></i> Declined</span>
+        <span class="chip" onclick="filterTx('challenge',this)"><i class="ti ti-shield" style="font-size:10px"></i> Challenged</span>
+        <span class="chip" onclick="filterTx('review',this)"><i class="ti ti-eye" style="font-size:10px"></i> Review Queue</span>
+        <span class="chip" onclick="filterTx('cross-border',this)"><i class="ti ti-world" style="font-size:10px"></i> Cross-Border</span>
+        <span class="chip" onclick="filterTx('high-risk',this)"><i class="ti ti-alert-triangle" style="font-size:10px"></i> Score ≥70</span>
+        <span class="chip" onclick="filterTx('velocity',this)"><i class="ti ti-trending-up" style="font-size:10px"></i> Velocity Hit</span>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table class="tbl" id="txTable">
+        <thead><tr>
+          <th>TXN ID</th><th>TIME</th><th>CARD / SEG</th><th>AMOUNT</th><th>MERCHANT</th><th>MCC</th><th>CHANNEL</th><th>COUNTRY</th><th>RISK SCORE</th><th>FLAGS</th><th>DECISION</th>
+        </tr></thead>
+        <tbody id="txBody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- A2: Analyst Queue -->
+    <div id="page-a-queue" class="page">
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+        <div class="kpi"><div class="kpi-lbl">My Open Cases</div><div class="kpi-val">12</div></div>
+        <div class="kpi"><div class="kpi-lbl">Critical Priority</div><div class="kpi-val" style="color:var(--red)">2</div></div>
+        <div class="kpi"><div class="kpi-lbl">High Priority</div><div class="kpi-val" style="color:var(--amber)">5</div></div>
+        <div class="kpi"><div class="kpi-lbl">Avg Case Age</div><div class="kpi-val">2.4h</div></div>
+        <div class="kpi"><div class="kpi-lbl">SLA Breach Risk</div><div class="kpi-val" style="color:var(--red)">2</div></div>
+      </div>
+      <div id="queueList"></div>
+    </div>
+
+    <!-- A3: Decision Engine -->
+    <div id="page-a-engine" class="page">
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px">Trace the exact decision pipeline for any scenario. Useful for explaining to customers why a transaction was declined.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="chip on" onclick="loadEngine('grocery',this)">Grocery approval</button>
+        <button class="chip" onclick="loadEngine('digital',this)">Cross-border digital goods</button>
+        <button class="chip" onclick="loadEngine('cardtest',this)">Card testing burst</button>
+        <button class="chip" onclick="loadEngine('luxury',this)">Luxury anomaly</button>
+        <button class="chip" onclick="loadEngine('atm',this)">ATM impossible travel</button>
+        <button class="chip" onclick="loadEngine('travel',this)">VIP traveller</button>
+      </div>
+      <div id="engineContent"></div>
+    </div>
+
+    <!-- ══════════ MANAGER PAGES ══════════ -->
+
+    <!-- M1: Rules Workbench -->
+    <div id="page-m-rules" class="page">
+      <div style="font-size:11.5px;color:var(--text2);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r);padding:9px 11px;margin-bottom:16px">
+        <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:12px;margin-right:5px"></i>
+        <strong style="color:var(--amber)">Simulation mode</strong> — Adjustments preview downstream impact without touching production. Commit to deploy.
+      </div>
+      <div class="rules-grid">
+        <div class="rule-card">
+          <div class="rule-title">ML Score Thresholds <span class="badge b-amber">Core Policy</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Approve band (score ≤)</span><span class="slider-val" id="sv-approve">35</span></div><input type="range" min="10" max="60" value="35" step="1" id="sl-approve" oninput="onSlider()"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Challenge band (score ≤)</span><span class="slider-val" id="sv-challenge">65</span></div><input type="range" min="40" max="85" value="65" step="1" id="sl-challenge" oninput="onSlider()"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Decline threshold (score ≥)</span><span class="slider-val" id="sv-decline">80</span></div><input type="range" min="60" max="98" value="80" step="1" id="sl-decline" oninput="onSlider()"></div>
+          <div class="impact-box">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:7px">Projected Portfolio Impact</div>
+            <div class="impact-row"><span class="impact-lbl">Approval rate</span><span class="impact-val" style="color:var(--green)" id="imp-a">94.2%</span></div>
+            <div class="impact-row"><span class="impact-lbl">Fraud capture rate</span><span class="impact-val" style="color:var(--red)" id="imp-c">87.4%</span></div>
+            <div class="impact-row"><span class="impact-lbl">False positive rate</span><span class="impact-val" style="color:var(--amber)" id="imp-f">0.7%</span></div>
+            <div class="impact-row"><span class="impact-lbl">Challenge vol / day</span><span class="impact-val" id="imp-ch">1,840</span></div>
+            <div class="impact-row"><span class="impact-lbl">Review vol / day</span><span class="impact-val" id="imp-rv">620</span></div>
+          </div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-title">Velocity Rules <span class="badge b-blue">Real-time</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Max txns / 10 min</span><span class="slider-val" id="sv-vt">5</span></div><input type="range" min="2" max="15" value="5" step="1" oninput="document.getElementById('sv-vt').textContent=this.value"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Max spend / hour (₹)</span><span class="slider-val" id="sv-vs">25,000</span></div><input type="range" min="5000" max="100000" value="25000" step="5000" oninput="document.getElementById('sv-vs').textContent=Number(this.value).toLocaleString('en-IN')"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Unique merchants / 30 min</span><span class="slider-val" id="sv-vm">3</span></div><input type="range" min="1" max="10" value="3" step="1" oninput="document.getElementById('sv-vm').textContent=this.value"></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Burst heuristic (card-testing detection)</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">CNP retry cap (2 per 5 min)</span></div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-title">Cross-Border Policy <span class="badge b-red">High Impact</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Cross-border score uplift</span><span class="slider-val" id="sv-cb">+12 pts</span></div><input type="range" min="0" max="30" value="12" step="1" oninput="document.getElementById('sv-cb').textContent='+'+this.value+' pts'"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>High-risk country multiplier</span><span class="slider-val" id="sv-hr">2.0×</span></div><input type="range" min="10" max="40" value="20" step="1" oninput="document.getElementById('sv-hr').textContent=(this.value/10).toFixed(1)+'×'"></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Impossible travel — hard decline</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Travel flag exempts geo risk</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox"><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Hard block: known high-risk countries</span></div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-title">Step-up / 3DS Policy <span class="badge b-amber">Friction</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Force 3DS — new merchants (CNP)</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">OTP on first-use of new device</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">App push for high-value CNP</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox"><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Frictionless 3DS2 (silent challenge)</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>CNP challenge trigger (₹)</span><span class="slider-val" id="sv-3ds">5,000</span></div><input type="range" min="500" max="20000" value="5000" step="500" oninput="document.getElementById('sv-3ds').textContent=Number(this.value).toLocaleString('en-IN')"></div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-title">Amount Thresholds <span class="badge b-gray">Segment-aware</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Large-tx flag — Mass (₹)</span><span class="slider-val" id="sv-am">15,000</span></div><input type="range" min="5000" max="50000" value="15000" step="1000" oninput="document.getElementById('sv-am').textContent=Number(this.value).toLocaleString('en-IN')"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>Large-tx flag — Premium (₹)</span><span class="slider-val" id="sv-ap">75,000</span></div><input type="range" min="25000" max="200000" value="75000" step="5000" oninput="document.getElementById('sv-ap').textContent=Number(this.value).toLocaleString('en-IN')"></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>ATM daily limit (₹)</span><span class="slider-val" id="sv-atm">10,000</span></div><input type="range" min="2000" max="25000" value="10000" step="1000" oninput="document.getElementById('sv-atm').textContent=Number(this.value).toLocaleString('en-IN')"></div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-title">Merchant Policy <span class="badge b-gray">MCC-aware</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Block confirmed compromised merchants</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Score uplift — first-time merchant</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox" checked><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Trusted recurring — no friction</span></div>
+          <div class="toggle-row"><label class="toggle"><input type="checkbox"><span class="tslider"></span></label><span style="font-size:11px;color:var(--text2)">Hard block: crypto / NFT MCCs</span></div>
+          <div class="slider-wrap"><div class="slider-lbl"><span>First-time merchant uplift</span><span class="slider-val" id="sv-nm">+8 pts</span></div><input type="range" min="0" max="25" value="8" step="1" oninput="document.getElementById('sv-nm').textContent='+'+this.value+' pts'"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:14px">
+        <button class="tbtn" style="background:var(--red);border-color:var(--red);color:#fff;padding:7px 18px;font-size:12px" onclick="showToast('Committed to simulation','Impact preview updated across all dashboards')"><i class="ti ti-check"></i> Commit to Simulation</button>
+        <button class="tbtn" style="padding:7px 14px;font-size:12px">Reset to Production</button>
+        <button class="tbtn" style="padding:7px 14px;font-size:12px"><i class="ti ti-history"></i> Version History</button>
+      </div>
+    </div>
+
+    <!-- M2: Customer Impact -->
+    <div id="page-m-impact" class="page">
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:14px">This view shows how fraud policy decisions land on real customers — good customers declined, friction by segment, and challenge abandonment. Strategy managers use this to prevent the fraud team from becoming a customer experience liability.</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi"><div class="kpi-lbl">Good Customers Declined</div><div class="kpi-val" style="color:var(--amber)">0.7%</div><div class="kpi-d dn">False positive rate</div></div>
+        <div class="kpi"><div class="kpi-lbl">Repeat Friction Rate</div><div class="kpi-val" style="color:var(--amber)">0.31%</div><div class="kpi-d nt">Same customer challenged 2+ times this week</div></div>
+        <div class="kpi"><div class="kpi-lbl">Challenge Abandonment</div><div class="kpi-val" style="color:var(--red)">12.4%</div><div class="kpi-d dn">Customers who gave up on OTP/push</div></div>
+        <div class="kpi"><div class="kpi-lbl">Friction Cost Est.</div><div class="kpi-val" style="color:var(--amber)">₹3.1Cr</div><div class="kpi-d nt">Estimated lost GMV from false declines</div></div>
+      </div>
+      <div class="two-col mb-16" style="margin-bottom:14px">
+        <div class="chart-card">
+          <div class="chart-title">Friction Rate by Customer Segment</div>
+          <div style="margin-top:6px">
+            <div class="mcc-row"><div class="mcc-lbl">Mass (debit)</div><div class="mcc-bar"><div class="mcc-fill" style="width:72%;background:var(--amber)"></div></div><div class="mcc-pct">7.2%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Emerging Affluent</div><div class="mcc-bar"><div class="mcc-fill" style="width:40%;background:var(--amber)"></div></div><div class="mcc-pct">4.0%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Premium (Platinum)</div><div class="mcc-bar"><div class="mcc-fill" style="width:22%;background:var(--blue)"></div></div><div class="mcc-pct">2.2%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">HNI / Infinite</div><div class="mcc-bar"><div class="mcc-fill" style="width:9%;background:var(--green)"></div></div><div class="mcc-pct">0.9%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Corporate Card</div><div class="mcc-bar"><div class="mcc-fill" style="width:15%;background:var(--green)"></div></div><div class="mcc-pct">1.5%</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Internal vs Customer-Safe Reason Codes</div>
+          <div style="margin-top:4px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px">What the customer sees</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+              <span class="badge b-gray">Unusual activity detected</span>
+              <span class="badge b-gray">Card temporarily restricted</span>
+              <span class="badge b-gray">Additional verification required</span>
+              <span class="badge b-gray">Please contact your bank</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px">What the analyst sees</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <span class="badge b-red">SCORE_EXCEED_TH80</span>
+              <span class="badge b-amber">VEL_BURST_CNP</span>
+              <span class="badge b-red">GEO_IMPOSSIBLE_TRAVEL</span>
+              <span class="badge b-amber">DEV_NEW_UNVERIFIED</span>
+              <span class="badge b-red">MCC_HIGH_RISK_5734</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Trade-off: Fraud Capture Rate vs False Positive Rate</div>
+        <div style="position:relative;height:200px"><canvas id="tradeoffChart" role="img" aria-label="Bubble chart showing fraud capture rate vs false positive rate for different policy settings">Chart loading.</canvas></div>
+        <div style="display:flex;gap:14px;margin-top:8px;font-size:10.5px;color:var(--text2)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444"></span>Aggressive policy (high capture, high FP)</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b"></span>Current policy</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e"></span>Balanced target zone</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ LEADER PAGES ══════════ -->
+
+    <!-- L1: Portfolio Dashboard -->
+    <div id="page-l-dashboard" class="page">
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Portfolio-level health summary. No transaction detail — you are looking at aggregate KPIs, trends, and exceptions only.</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi"><div class="kpi-lbl">Auth Approval Rate</div><div class="kpi-val" style="color:var(--green)" id="ld-approval">94.2%</div><div class="kpi-d nt">↔ Target: ≥94%</div></div>
+        <div class="kpi"><div class="kpi-lbl">Fraud Rate (bps)</div><div class="kpi-val" style="color:var(--red)">6.4</div><div class="kpi-d dn">↑ vs 5.1 last month</div></div>
+        <div class="kpi"><div class="kpi-lbl">Fraud Prevented</div><div class="kpi-val" style="color:var(--green)">₹4.2Cr</div><div class="kpi-d up">↑ +18% today</div></div>
+        <div class="kpi"><div class="kpi-lbl">Fraud Exposure</div><div class="kpi-val" style="color:var(--red)">₹12.7Cr</div><div class="kpi-d dn">Suspected undetected</div></div>
+        <div class="kpi"><div class="kpi-lbl">Chargeback Rate</div><div class="kpi-val" style="color:var(--amber)">0.12%</div><div class="kpi-d nt">Within threshold</div></div>
+        <div class="kpi"><div class="kpi-lbl">Challenge Success</div><div class="kpi-val" style="color:var(--green)">87.3%</div><div class="kpi-d up">↑ vs 84.1% prior mo.</div></div>
+        <div class="kpi"><div class="kpi-lbl">Analyst Queue</div><div class="kpi-val">312</div><div class="kpi-d dn">↑ SLA risk: 28 cases</div></div>
+        <div class="kpi"><div class="kpi-lbl">Avg Decision Speed</div><div class="kpi-val" style="color:var(--green)">87ms</div><div class="kpi-d nt">p99: 214ms</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">Decision Mix — 30-Day Trend</div>
+          <div style="position:relative;height:180px"><canvas id="trendChart" role="img" aria-label="Line chart showing approval, decline, and challenge rates over 30 days">Chart loading.</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Monthly Fraud Prevented vs Lost (₹Cr)</div>
+          <div style="position:relative;height:180px"><canvas id="lossChart" role="img" aria-label="Grouped bar chart of fraud prevented versus loss by month">Chart loading.</canvas></div>
+        </div>
+      </div>
+      <div class="two-col" style="margin-bottom:14px">
+        <div class="chart-card">
+          <div class="chart-title">Top Risky MCCs by Fraud Rate</div>
+          <div style="margin-top:6px">
+            <div class="mcc-row"><div class="mcc-lbl">Digital Goods (5734)</div><div class="mcc-bar"><div class="mcc-fill" style="width:92%"></div></div><div class="mcc-pct">9.2%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Crypto Exchanges</div><div class="mcc-bar"><div class="mcc-fill" style="width:87%;background:var(--amber)"></div></div><div class="mcc-pct">8.7%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Online Gambling</div><div class="mcc-bar"><div class="mcc-fill" style="width:76%"></div></div><div class="mcc-pct">7.6%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">ATM Cash Advance</div><div class="mcc-bar"><div class="mcc-fill" style="width:54%;background:var(--amber)"></div></div><div class="mcc-pct">5.4%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Luxury Retail (5944)</div><div class="mcc-bar"><div class="mcc-fill" style="width:41%;background:var(--amber)"></div></div><div class="mcc-pct">4.1%</div></div>
+            <div class="mcc-row"><div class="mcc-lbl">Grocery (5411)</div><div class="mcc-bar"><div class="mcc-fill" style="width:8%;background:var(--green)"></div></div><div class="mcc-pct">0.8%</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Risk Geographies</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <span class="badge b-red" style="font-size:10.5px;padding:4px 9px">🇳🇬 Nigeria 14.2%</span>
+            <span class="badge b-red" style="font-size:10.5px;padding:4px 9px">🇷🇴 Romania 11.8%</span>
+            <span class="badge b-red" style="font-size:10.5px;padding:4px 9px">🇧🇬 Bulgaria 9.3%</span>
+            <span class="badge b-amber" style="font-size:10.5px;padding:4px 9px">🇲🇾 Malaysia 6.1%</span>
+            <span class="badge b-amber" style="font-size:10.5px;padding:4px 9px">🇺🇦 Ukraine 5.9%</span>
+            <span class="badge b-amber" style="font-size:10.5px;padding:4px 9px">🇦🇪 UAE 4.4%</span>
+            <span class="badge b-blue" style="font-size:10.5px;padding:4px 9px">🇸🇬 Singapore 2.1%</span>
+            <span class="badge b-green" style="font-size:10.5px;padding:4px 9px">🇮🇳 India 1.2%</span>
+          </div>
+          <hr class="divider">
+          <div class="chart-title" style="margin-bottom:6px">Analyst SLA Health</div>
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--text2)">Priya Rajan</td><td class="mono" style="text-align:right">12 cases</td><td style="text-align:right"><span style="color:var(--green);font-size:10px">● On Track</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--text2)">Rohit Menon</td><td class="mono" style="text-align:right">22 cases</td><td style="text-align:right"><span style="color:var(--amber);font-size:10px">● At Risk</span></td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--text2)">Ananya Iyer</td><td class="mono" style="text-align:right">9 cases</td><td style="text-align:right"><span style="color:var(--green);font-size:10px">● On Track</span></td></tr>
+            <tr><td style="padding:5px 0;color:var(--text2)">Karan Shah</td><td class="mono" style="text-align:right">41 cases</td><td style="text-align:right"><span style="color:var(--red);font-size:10px">● SLA Breach</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2: Exceptions -->
+    <div id="page-l-exceptions" class="page">
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Situations that need a leadership decision or escalation — not individual transactions, but systemic issues, policy breaches, or trend anomalies.</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="kpi-lbl">Active Incidents</div><div class="kpi-val" style="color:var(--red)">2</div><div class="kpi-d dn">Card testing + BIN attack</div></div>
+        <div class="kpi"><div class="kpi-lbl">Policy Threshold Breaches</div><div class="kpi-val" style="color:var(--amber)">1</div><div class="kpi-d dn">Fraud rate above target in MCC 5734</div></div>
+        <div class="kpi"><div class="kpi-lbl">Regulatory Flags</div><div class="kpi-val" style="color:var(--blue)">0</div><div class="kpi-d nt">No open items</div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="q-item crit">
+          <div class="q-top"><span class="badge b-red">INCIDENT</span><span class="q-title">Card Testing Burst — BIN range 652100–652199</span><span style="font-size:9px;color:var(--text3);font-family:var(--mono)">INC-2024-0091</span></div>
+          <div class="q-meta">
+            <span class="q-meta-i"><i class="ti ti-clock" style="font-size:10px"></i> Started 14:31 today</span>
+            <span class="q-meta-i"><i class="ti ti-link" style="font-size:10px"></i> 42 affected cards</span>
+            <span class="q-meta-i"><i class="ti ti-trending-up" style="font-size:10px"></i> Still active</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:7px">Automated BIN-level block applied. Recommend: notify card operations team, prepare customer comms, review BIN sourcing.</div>
+          <div class="q-acts"><button class="act-btn fraud" onclick="showToast('Escalated to Card Ops','Incident INC-2024-0091 escalated')">Escalate to Card Ops</button><button class="act-btn" onclick="showToast('Report generated','Incident report sent to compliance')">Generate Incident Report</button></div>
+        </div>
+        <div class="q-item high">
+          <div class="q-top"><span class="badge b-amber">THRESHOLD BREACH</span><span class="q-title">MCC 5734 fraud rate 9.2% — above 7% policy ceiling</span></div>
+          <div class="q-meta">
+            <span class="q-meta-i"><i class="ti ti-clock" style="font-size:10px"></i> Trending for 3 days</span>
+            <span class="q-meta-i"><i class="ti ti-coin" style="font-size:10px"></i> ₹1.2Cr excess exposure</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:7px">Digital goods MCC consistently above threshold. Strategy team has prepared three policy options: (A) tighten score threshold for MCC 5734 — approval impact −0.4pp; (B) mandate 3DS for all MCC 5734 CNP — challenge rate +2.1pp; (C) new ML sub-model for digital goods.</div>
+          <div class="q-acts"><button class="act-btn" onclick="showToast('Option A selected','Routed to Strategy for implementation')">Approve Option A</button><button class="act-btn" onclick="showToast('Option B selected','3DS mandate queued for deployment')">Approve Option B</button><button class="act-btn" onclick="showToast('Deferred','Scheduled for next strategy review')">Defer to Review</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ SUPPORT PAGES ══════════ -->
+
+    <!-- S1: Support Lookup -->
+    <div id="page-s-lookup" class="page">
+      <!-- Intro banner for support -->
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--rl);padding:13px 15px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:500;color:var(--blue);margin-bottom:4px"><i class="ti ti-info-circle" style="font-size:13px;margin-right:5px"></i>Customer Support View</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6">You can look up why a customer's transaction was declined or challenged. You will see plain-English reasons only — no internal fraud scores, rule codes, or ML details, as sharing those could help fraudsters game the system.</div>
+      </div>
+
+      <!-- Search bar -->
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <input type="text" id="supportSearch" placeholder="Enter card last 4 digits or customer name…" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--r);font-size:12px;outline:none" value="Pooja Nair">
+        <button class="tbtn" style="padding:7px 16px;font-size:12px;background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="loadSupportResults()">Look Up</button>
+      </div>
+      <div id="supportResults"></div>
+    </div>
+
+    <!-- S2: Support Scripts -->
+    <div id="page-s-scripts" class="page">
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Pre-approved call scripts for common scenarios. These explain the situation to customers without revealing internal fraud logic.</div>
+      <div class="support-card">
+        <div style="font-size:12.5px;font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:7px"><span class="badge b-red">DECLINED</span> Customer says: "My card was declined and I don't know why"</div>
+        <div class="step-item"><div class="step-num">1</div><div><div style="font-size:11.5px;font-weight:500">Acknowledge and empathise</div><div class="script-box">"I completely understand how frustrating that must have been, especially at the moment of payment. Let me look into this for you right away."</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div style="font-size:11.5px;font-weight:500">Explain without exposing fraud logic</div><div class="script-box">"Our system flagged this transaction as unusual based on activity on your account. This is an automatic safety measure to protect you from potential fraud. It doesn't mean you did anything wrong."</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div style="font-size:11.5px;font-weight:500">Offer resolution</div><div class="script-box">"I can unlock this for you right now. Could you confirm [verification question]? Once verified, I'll whitelist this merchant for you and you can retry the transaction."</div></div></div>
+      </div>
+      <div class="support-card">
+        <div style="font-size:12.5px;font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:7px"><span class="badge b-amber">CHALLENGED</span> Customer says: "I got an OTP I didn't ask for"</div>
+        <div class="step-item"><div class="step-num">1</div><div><div style="font-size:11.5px;font-weight:500">Reassure — this is a security feature, not an error</div><div class="script-box">"That OTP was sent by us as an extra security check. We noticed something slightly unusual about this transaction — a new device or location — and wanted to make sure it was really you."</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div style="font-size:11.5px;font-weight:500">Confirm it was them</div><div class="script-box">"Was the transaction at [merchant name] for [amount] made by you? … Great, then you're all set. The OTP just needed to be entered to approve it."</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div style="font-size:11.5px;font-weight:500">Prevent repeat friction</div><div class="script-box">"To avoid this in future, you can set up trusted devices in your banking app. That way we'll recognise your phone and won't need to send OTPs for routine transactions."</div></div></div>
+      </div>
+      <div class="support-card">
+        <div style="font-size:12.5px;font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:7px"><span class="badge b-purple">BLOCKED</span> Customer says: "My card has been blocked and I can't use it"</div>
+        <div class="step-item"><div class="step-num">1</div><div><div style="font-size:11.5px;font-weight:500">Do not confirm fraud suspicion directly</div><div class="script-box">"Your card has been temporarily placed on hold as a precautionary measure. This is done automatically to protect your account. I want to make sure your funds are safe."</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div style="font-size:11.5px;font-weight:500">Verify identity before any action</div><div class="script-box">"Before I can review the restriction, I need to verify your identity. Could you please confirm [2FA verification]. Thank you."</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div style="font-size:11.5px;font-weight:500">Route appropriately</div><div style="font-size:11px;color:var(--text2);margin-top:5px">If genuine customer confirmed: escalate to fraud analyst for unblock review. Do NOT unblock directly from support without analyst sign-off when a critical case is flagged.</div></div></div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-head">
+    <button class="dp-close" onclick="closeDetail()"><i class="ti ti-x" style="font-size:12px"></i></button>
+    <div><div style="font-size:13px;font-weight:500" id="dpTitle">Transaction Detail</div><div style="font-size:9.5px;color:var(--text3);font-family:var(--mono)" id="dpId"></div></div>
+    <div style="margin-left:auto" id="dpBadge"></div>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+</div>
+
+<!-- SCENARIO MODAL -->
+<div class="modal-bg" id="scenarioModal">
+  <div class="modal">
+    <div class="modal-head"><div style="font-size:13.5px;font-weight:500"><i class="ti ti-bolt" style="color:var(--amber);margin-right:6px"></i>Scenario Presets</div><button class="dp-close" onclick="document.getElementById('scenarioModal').classList.remove('open')"><i class="ti ti-x" style="font-size:12px"></i></button></div>
+    <div class="modal-body">
+      <div class="sc-opt on" onclick="setScenario('normal',this)"><div class="sc-opt-name">Normal Operations</div><div class="sc-opt-desc">Standard fraud mix · ~94% approval rate · all rules at default</div></div>
+      <div class="sc-opt" onclick="setScenario('attack',this)"><div class="sc-opt-name"><i class="ti ti-alert-triangle" style="color:var(--red);margin-right:4px"></i>High Fraud Attack</div><div class="sc-opt-desc">Elevated velocity, card testing burst, score thresholds tightened</div></div>
+      <div class="sc-opt" onclick="setScenario('travel',this)"><div class="sc-opt-name"><i class="ti ti-plane" style="color:var(--blue);margin-right:4px"></i>Travel Season</div><div class="sc-opt-desc">High cross-border volume, travel flags active, geo risk suppressed</div></div>
+      <div class="sc-opt" onclick="setScenario('holiday',this)"><div class="sc-opt-name"><i class="ti ti-shopping-cart" style="color:var(--green);margin-right:4px"></i>Holiday Ecommerce Spike</div><div class="sc-opt-desc">High CNP, digital goods risk elevated, step-up challenge rate up</div></div>
+      <div class="sc-opt" onclick="setScenario('cardtest',this)"><div class="sc-opt-name"><i class="ti ti-refresh" style="color:var(--amber);margin-right:4px"></i>Card Testing Incident</div><div class="sc-opt-desc">BIN-range burst of micro CNP txns · automated block active</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-title" id="toastT"></div><div class="toast-msg" id="toastM"></div></div>
+
+<script>
+// ─── PERSONA CONFIG ───────────────────────────────────────────────────────────
+const PERSONAS = {
+  analyst: {
+    name:'Priya Rajan', role:'Sr. Fraud Analyst', initials:'PR', color:'blue',
+    desc:'Investigates individual transactions, works the alert queue, traces decision pipelines.',
+    nav:[
+      {id:'a-feed', label:'Live Auth Feed', icon:'ti-activity', badge:'LIVE', bclass:''},
+      {id:'a-queue', label:'My Case Queue', icon:'ti-clipboard-list', badge:'12', bclass:'amber'},
+      {id:'a-engine', label:'Decision Tracer', icon:'ti-cpu', badge:'', bclass:''},
+    ],
+    defaultPage:'a-feed',
+    pageTitle:{ 'a-feed':'Live Authorization Feed', 'a-queue':'My Case Queue', 'a-engine':'Decision Pipeline Tracer' }
+  },
+  manager: {
+    name:'Vikram Sethi', role:'Fraud Strategy Manager', initials:'VS', color:'purple',
+    desc:'Owns fraud rules, score thresholds, and policy — monitors the trade-off between loss prevention and customer friction.',
+    nav:[
+      {id:'m-rules', label:'Rules Workbench', icon:'ti-adjustments-horizontal', badge:'', bclass:''},
+      {id:'m-impact', label:'Customer Impact', icon:'ti-users', badge:'', bclass:''},
+      {id:'a-feed', label:'Live Feed (read)', icon:'ti-activity', badge:'', bclass:'gray'},
+    ],
+    defaultPage:'m-rules',
+    pageTitle:{ 'm-rules':'Fraud Rules & Policy Workbench', 'm-impact':'Customer Impact & CX Trade-offs', 'a-feed':'Live Authorization Feed (read-only)' }
+  },
+  leader: {
+    name:'Kavitha Rao', role:'Head of Fraud Risk', initials:'KR', color:'amber',
+    desc:'Owns portfolio-level fraud P&L, approval rate, regulatory posture, and team SLA health.',
+    nav:[
+      {id:'l-dashboard', label:'Portfolio Dashboard', icon:'ti-layout-dashboard', badge:'', bclass:''},
+      {id:'l-exceptions', label:'Exceptions & Alerts', icon:'ti-alert-triangle', badge:'2', bclass:''},
+    ],
+    defaultPage:'l-dashboard',
+    pageTitle:{ 'l-dashboard':'Portfolio Risk Dashboard', 'l-exceptions':'Exceptions & Escalations' }
+  },
+  support: {
+    name:'Amit Joshi', role:'Customer Support Lead', initials:'AJ', color:'green',
+    desc:'Looks up why a customer\'s card was declined. Sees plain-English reasons only — no internal fraud logic.',
+    nav:[
+      {id:'s-lookup', label:'Card Lookup', icon:'ti-search', badge:'', bclass:''},
+      {id:'s-scripts', label:'Call Scripts', icon:'ti-message', badge:'', bclass:''},
+    ],
+    defaultPage:'s-lookup',
+    pageTitle:{ 's-lookup':'Customer Card Lookup', 's-scripts':'Support Call Scripts' }
+  }
+};
+
+const avatarColors = { blue:'var(--blue-bg),var(--blue-border),var(--blue)', purple:'var(--purple-bg),rgba(168,85,247,.4),var(--purple)', amber:'var(--amber-bg),var(--amber-border),var(--amber)', green:'var(--green-bg),var(--green-border),var(--green)' };
+
+let currentPersona = 'analyst';
+let currentPage = 'a-feed';
+
+function switchPersona(p) {
+  currentPersona = p;
+  const P = PERSONAS[p];
+  document.getElementById('personaDesc').textContent = P.desc;
+  document.getElementById('userName').textContent = P.name;
+  document.getElementById('userRole').textContent = P.role;
+  document.getElementById('userAv').textContent = P.initials;
+  const [bg, border, color] = avatarColors[P.color].split(',');
+  document.getElementById('userAv').style.cssText = `background:${bg};border:1px solid ${border};color:${color};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0`;
+  renderNav(p);
+  navigateTo(P.defaultPage);
+}
+
+function renderNav(p) {
+  const P = PERSONAS[p];
+  let html = '';
+  P.nav.forEach(n => {
+    const badgeHtml = n.badge ? `<span class="nav-badge ${n.bclass}">${n.badge}</span>` : '';
+    html += `<button class="nav-item${currentPage===n.id?' active':''}" onclick="navigateTo('${n.id}')"><i class="ti ${n.icon}"></i>${n.label}${badgeHtml}</button>`;
+  });
+  document.getElementById('navSection').innerHTML = `<div class="nav-group-label">${p==='analyst'?'Investigation':p==='manager'?'Strategy':p==='leader'?'Leadership':'Support'}</div>${html}`;
+}
+
+function navigateTo(pageId) {
+  currentPage = pageId;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-'+pageId);
+  if (pg) pg.classList.add('active');
+  const P = PERSONAS[currentPersona];
+  document.getElementById('pageTitle').textContent = P.pageTitle[pageId] || pageId;
+  renderNav(currentPersona);
+  if (pageId === 'a-feed' || pageId === 'm-feed') renderTxTable();
+  if (pageId === 'a-queue') renderQueue();
+  if (pageId === 'a-engine') loadEngine('grocery', null);
+  if (pageId === 'l-dashboard') initLeaderCharts();
+  if (pageId === 'm-impact') initImpactChart();
+  if (pageId === 's-lookup') loadSupportResults();
+}
+
+// ─── TRANSACTION DATA ────────────────────────────────────────────────────────
+const TXS = [
+  { id:'TXN-8847291', ts:'14:32:17', card:'4521', seg:'Mass', amount:'₹1,240', merchant:'More Supermarket', mcc:'5411 · Grocery', channel:'CP · Tap', country:'IN', score:8, flags:[], decision:'approved', key:'grocery' },
+  { id:'TXN-8847292', ts:'14:32:19', card:'6812', seg:'Emerging', amount:'₹18,400', merchant:'SteamStore.com', mcc:'5734 · Digital Goods', channel:'CNP · Ecom', country:'US', score:84, flags:['CROSS_BORDER','NEW_DEVICE','MCC_HIGHRISK'], decision:'declined', key:'digital' },
+  { id:'TXN-8847293', ts:'14:32:22', card:'3901', seg:'Mass', amount:'₹149', merchant:'G2A.com', mcc:'5734 · Digital Goods', channel:'CNP · Ecom', country:'PL', score:78, flags:['VEL_BURST','CARD_TESTING'], decision:'declined', key:'cardtest' },
+  { id:'TXN-8847294', ts:'14:32:23', card:'3901', seg:'Mass', amount:'₹199', merchant:'Eneba.com', mcc:'5734 · Digital Goods', channel:'CNP · Ecom', country:'LT', score:80, flags:['VEL_BURST','RETRY_PATTERN'], decision:'declined', key:'cardtest' },
+  { id:'TXN-8847295', ts:'14:32:25', card:'7743', seg:'Premium', amount:'₹74,500', merchant:'Louis Vuitton', mcc:'5944 · Luxury Retail', channel:'CNP · Ecom', country:'AE', score:71, flags:['AMOUNT_ANOMALY','CROSS_BORDER'], decision:'review', key:'luxury' },
+  { id:'TXN-8847296', ts:'14:32:28', card:'9124', seg:'Mass', amount:'₹500', merchant:'Mumbai Metro', mcc:'4111 · Transit', channel:'CP · NFC', country:'IN', score:4, flags:[], decision:'approved', key:'transit' },
+  { id:'TXN-8847297', ts:'14:32:31', card:'5539', seg:'Emerging', amount:'₹8,400', merchant:'Zara.com', mcc:'5691 · Apparel', channel:'CNP · Ecom', country:'IN', score:52, flags:['NEW_DEVICE'], decision:'challenge', key:'normal' },
+  { id:'TXN-8847298', ts:'14:32:33', card:'2287', seg:'Mass', amount:'₹15,000', merchant:'ATM · HDFC Andheri', mcc:'6011 · ATM', channel:'ATM', country:'IN', score:87, flags:['GEO_MISMATCH','IMPOSSIBLE_TRAVEL'], decision:'declined', key:'atm' },
+  { id:'TXN-8847299', ts:'14:32:37', card:'8819', seg:'HNI', amount:'₹1,82,000', merchant:'Four Seasons SG', mcc:'7011 · Hotel', channel:'CP · Chip', country:'SG', score:22, flags:['TRAVEL_FLAG_ON'], decision:'approved', key:'travel' },
+  { id:'TXN-8847300', ts:'14:32:41', card:'4412', seg:'Mass', amount:'₹199', merchant:'Netflix', mcc:'4899 · Streaming', channel:'CNP · Recurring', country:'IN', score:5, flags:['TRUSTED_RECURRING'], decision:'approved', key:'recurring' },
+];
+
+const DETAIL = {
+  grocery:{ decision:'approved', score:8, conf:0.96, headline:'Low-risk domestic grocery. All trust signals present.',
+    rationale:'Card-present contactless at a known domestic grocery chain. Score 8 — well below any threshold. This merchant has been visited 14 times by this cardholder. No velocity, device, or geo concerns.',
+    rules:[], pos:['Trusted merchant (14 prior visits)','Card-present / contactless NFC','Domestic India transaction','Amount within normal range','No failed attempts recently'],
+    neg:[],
+    factors:[{l:'Merchant trust',v:88,t:'pos'},{l:'Behavioral baseline',v:82,t:'pos'},{l:'CP auth mode',v:75,t:'pos'},{l:'Velocity clear',v:70,t:'pos'}],
+    pipe:[{n:'Receive',c:'en',d:'ISO msg parsed · 12ms'},{n:'Enrich',c:'en',d:'MCC 5411 · IN · CP-NFC · device known'},{n:'Rules',c:'ok',d:'0/24 rules hit'},{n:'ML Score',c:'ok',d:'Score: 8 · conf: 0.96'},{n:'Policy',c:'ok',d:'Score ≤35 → approve'},{n:'Friction',c:'ok',d:'None required'},{n:'Decision',c:'ok',d:'APPROVE · 42ms'}],
+    hist:[{t:'Today 12:14',d:'₹2,100 — More Supermarket',c:'g'},{t:'Today 09:22',d:'₹450 — Swiggy',c:'g'},{t:'Yesterday',d:'₹5,200 — Bata Store',c:'g'}],
+    customerMsg:'Your ₹1,240 payment at More Supermarket was approved.',
+    analystNote:'APPROVED · SCORE:8 · CHANNEL:CP_NFC · MERCHANT_TIER:TRUSTED · LATENCY:42ms'
+  },
+  digital:{ decision:'declined', score:84, conf:0.87, headline:'High-risk CNP from new device in cross-border jurisdiction, digital goods MCC.',
+    rationale:'Score 84 exceeds decline threshold of 80. No prior cross-border spend by this cardholder. Device fingerprint unrecognised. MCC 5734 carries 9.2% portfolio fraud rate. Amount is 4.8× the cardholder mean CNP spend. No 3DS completed.',
+    rules:['CROSS_BORDER_UPLIFT: +12pts','NEW_DEVICE_UNVERIFIED: +18pts','MCC_DIGITAL_GOODS_HIGH: +15pts','AMOUNT_ANOMALY_4.8X: +10pts','NO_3DS_COMPLETED: +8pts'],
+    pos:['Account tenure: 3 years','No prior dispute history'],
+    neg:['New unverified device','Cross-border — US jurisdiction','MCC 5734 (digital goods) high risk','Amount 4.8× mean spend','No 3DS authentication','First-time merchant'],
+    factors:[{l:'Device trust (unverified)',v:85,t:'neg'},{l:'Cross-border risk',v:78,t:'neg'},{l:'MCC 5734 risk',v:72,t:'neg'},{l:'Amount anomaly',v:65,t:'neg'},{l:'Account tenure (positive)',v:30,t:'pos'}],
+    pipe:[{n:'Receive',c:'en',d:'CNP · ecom · no 3DS · 14ms'},{n:'Enrich',c:'ru',d:'IP: US proxy · device: unknown'},{n:'Rules',c:'ru',d:'5 rules triggered · +63pts'},{n:'ML Score',c:'fl',d:'Score: 84 · declined threshold crossed'},{n:'Policy',c:'fl',d:'Score ≥80 → decline'},{n:'Friction',c:'ch',d:'N/A — decline takes priority'},{n:'Decision',c:'fl',d:'DECLINE + case · 61ms'}],
+    hist:[{t:'Today 11:42',d:'₹3,800 — Amazon.in (approved)',c:'g'},{t:'Yesterday',d:'₹1,200 — Myntra.com (approved)',c:'g'},{t:'3 days ago',d:'₹650 — Swiggy (approved)',c:'g'}],
+    customerMsg:'Your transaction was declined. We noticed unusual activity. If this was you, call 1800-XXX-XXXX.',
+    analystNote:'DECLINED · SCORE:84 · RULES:5 · GEO:CB_US · DEV:NEW_UNVERIFIED · MCC:5734 · 3DS:NONE · LATENCY:61ms'
+  },
+  cardtest:{ decision:'declined', score:78, conf:0.91, headline:'Card-testing pattern confirmed — burst of micro CNP transactions across foreign merchants.',
+    rationale:'Third transaction in 18 seconds from the same card. Sequential small amounts at Eastern European digital merchants — a textbook card-testing signature where fraudsters verify stolen card numbers by running tiny charges before attempting large fraudulent purchases.',
+    rules:['VEL_BURST_CNP_3IN18S: +25pts','CARD_TESTING_PATTERN: +20pts','CROSS_BORDER_MULTI_MERCH: +15pts'],
+    pos:[],
+    neg:['Burst: 3 CNP txns in 18 seconds','Sequential small amounts','Multiple foreign merchants','Card testing BIN pattern match'],
+    factors:[{l:'Velocity burst',v:95,t:'neg'},{l:'Card testing pattern',v:88,t:'neg'},{l:'Cross-border multi-merch',v:75,t:'neg'}],
+    pipe:[{n:'Receive',c:'ru',d:'Burst flag raised at ingest'},{n:'Enrich',c:'ru',d:'Seq. CNP · PL/LT merchants · small amts'},{n:'Rules',c:'fl',d:'VEL_BURST + CARD_TEST confirmed'},{n:'ML Score',c:'fl',d:'Score: 78 · card testing model: 0.91'},{n:'Policy',c:'fl',d:'Hard block: card testing'},{n:'Friction',c:'ch',d:'N/A — hard block'},{n:'Decision',c:'fl',d:'DECLINE + TEMP BLOCK · 38ms'}],
+    hist:[{t:'14:32:22',d:'₹149 — G2A.com (this txn)',c:'r'},{t:'14:32:19',d:'₹99 — Kinguin.net (declined)',c:'r'},{t:'14:32:17',d:'₹49 — GamersGate.com (declined)',c:'r'}],
+    customerMsg:'Your card has been temporarily restricted due to unusual activity. Please call us immediately.',
+    analystNote:'DECLINED · SCORE:78 · VEL_BURST:YES · CARD_TEST:CONFIRMED · TEMP_BLOCK:APPLIED · CASE:CRITICAL'
+  },
+  luxury:{ decision:'review', score:71, conf:0.62, headline:'Ambiguous high-value luxury purchase. Premium cardholder but signals conflict.',
+    rationale:'Score 71 in challenge/review band. Premium cardholder (Platinum, 2yr tenure). Amount is 3.2× mean spend. UAE is a moderate-risk geography. First time at this merchant. ML model confidence is low (0.62) — conflicting signals. Routed to manual review.',
+    rules:['AMOUNT_ANOMALY_3.2X: +14pts','CROSS_BORDER_UAE: +8pts','NEW_MERCHANT_CNP: +8pts','MCC_LUXURY_ELEVATED: +6pts'],
+    pos:['Premium segment — Platinum','2-year account tenure','No prior dispute history'],
+    neg:['Amount 3.2× spend mean','UAE cross-border','First-time merchant','ML confidence low (0.62)'],
+    factors:[{l:'ML uncertainty',v:62,t:'warn'},{l:'Amount anomaly',v:55,t:'neg'},{l:'Cross-border (UAE)',v:40,t:'warn'},{l:'Account tier (positive)',v:60,t:'pos'},{l:'Tenure (positive)',v:45,t:'pos'}],
+    pipe:[{n:'Receive',c:'en',d:'CP auth · high value · 14ms'},{n:'Enrich',c:'en',d:'Premium · first merchant · 3.2× mean'},{n:'Rules',c:'ru',d:'4 rules · score 71'},{n:'ML Score',c:'fr',d:'Score: 71 · conf LOW: 0.62'},{n:'Policy',c:'po',d:'Challenge + queue for review'},{n:'Friction',c:'fr',d:'App push challenge sent'},{n:'Decision',c:'ch',d:'REVIEW QUEUE · SLA 2h · 74ms'}],
+    hist:[{t:'Last week',d:'₹12,000 — Tanishq, IN',c:'g'},{t:'2 weeks ago',d:'₹8,900 — Shoppers Stop',c:'g'},{t:'1 month ago',d:'₹45,000 — Hotel Dubai (approved)',c:'g'}],
+    customerMsg:'We sent a verification request to your app for ₹74,500 at Louis Vuitton, UAE. Please approve in the app or call us.',
+    analystNote:'REVIEW_QUEUE · SCORE:71 · ML_CONF:0.62 · SEGMENT:PREMIUM · CHALLENGE:APP_PUSH · SLA:2H'
+  },
+  atm:{ decision:'declined', score:87, conf:0.93, headline:'Impossible travel — ATM in Mumbai 15 min after CNP transaction from Kolkata IP.',
+    rationale:'Score 87. Card used for CNP transaction in Kolkata at 14:18 (device IP resolves to Kolkata ISP). 15 minutes later ATM attempted in Andheri, Mumbai — 1,450km away. Physical travel is impossible. Impossible travel rule is a hard decline regardless of score or segment.',
+    rules:['IMPOSSIBLE_TRAVEL_1450KM_15MIN: HARD_DECLINE','GEO_MISMATCH_IP_VS_ATM: +22pts','POST_CNP_ATM_PATTERN: +18pts'],
+    pos:['Account tenure 1 year'],
+    neg:['Impossible travel: 1,450km in 15 min','Geo mismatch: IP Kolkata vs ATM Mumbai','Post-CNP ATM pattern','Hard decline rule overrides score'],
+    factors:[{l:'Impossible travel (hard rule)',v:98,t:'neg'},{l:'Geo mismatch',v:90,t:'neg'},{l:'Post-CNP ATM pattern',v:80,t:'neg'}],
+    pipe:[{n:'Receive',c:'en',d:'ATM · Andheri Mumbai · 14ms'},{n:'Enrich',c:'ru',d:'Last txn IP: Kolkata · Δ=15min · 1450km'},{n:'Rules',c:'fl',d:'IMPOSSIBLE_TRAVEL: HARD DECLINE triggered'},{n:'ML Score',c:'fl',d:'Score: 87 · geo model conf: 0.93'},{n:'Policy',c:'fl',d:'Hard rule → card block'},{n:'Friction',c:'ch',d:'N/A — hard rule bypasses challenge'},{n:'Decision',c:'fl',d:'HARD DECLINE + CARD BLOCKED · 29ms'}],
+    hist:[{t:'14:18 today',d:'₹5,600 — Amazon.in, CNP (Kolkata IP)',c:'a'},{t:'Yesterday',d:'₹3,200 — Zomato (approved)',c:'g'},{t:'3 days ago',d:'₹2,100 — Reliance Fresh',c:'g'}],
+    customerMsg:'Your card has been blocked for security. Please call 1800-XXX-XXXX or visit your branch.',
+    analystNote:'HARD_DECLINE · SCORE:87 · IMPOSSIBLE_TRAVEL · GEO:KOL→MUM · DIST:1450KM · TIME:15MIN · CARD_BLOCKED · CASE:FRAUD_PROBABLE'
+  },
+  travel:{ decision:'approved', score:22, conf:0.91, headline:'HNI traveller. Travel flag on file, trusted channel, amount within expanded HNI baseline.',
+    rationale:'Score 22 after travel flag adjustment (−15pts). Cardholder activated travel mode 2 days ago with Singapore itinerary. Card-present chip at a reputable hotel. Amount within expanded HNI limit. No friction applied.',
+    rules:['TRAVEL_FLAG_ACTIVE: −15pts (score reduction)'],
+    pos:['Travel flag on file — SG trip','HNI segment expanded limits','Card-present chip auth','Reputable merchant','Velocity clear'],
+    neg:['Cross-border high absolute value'],
+    factors:[{l:'Travel flag (score reduction)',v:85,t:'pos'},{l:'HNI segment baseline',v:78,t:'pos'},{l:'CP chip auth',v:72,t:'pos'},{l:'Merchant reputation',v:70,t:'pos'}],
+    pipe:[{n:'Receive',c:'en',d:'CP chip · SG hotel · 11ms'},{n:'Enrich',c:'en',d:'TRAVEL_FLAG: SG active · HNI segment'},{n:'Rules',c:'en',d:'1 rule: travel bypass · −15pts'},{n:'ML Score',c:'ok',d:'Score: 22 · conf: 0.91'},{n:'Policy',c:'ok',d:'Score ≤35 → approve'},{n:'Friction',c:'ok',d:'None — travel exemption'},{n:'Decision',c:'ok',d:'APPROVE · 38ms'}],
+    hist:[{t:'2 days ago',d:'Travel flag activated — SG itinerary',c:'g'},{t:'Yesterday',d:'₹28,000 — Changi Airport, SG',c:'g'},{t:'3 days ago',d:'₹4,500 — Mumbai Airport Duty Free',c:'g'}],
+    customerMsg:'Your ₹1,82,000 payment at Four Seasons Singapore was approved. Enjoy your stay.',
+    analystNote:'APPROVED · SCORE:22 · TRAVEL:ACTIVE_SG · SEGMENT:HNI · CHANNEL:CP_CHIP · LATENCY:38ms'
+  }
+};
+
+// ─── QUEUE DATA ───────────────────────────────────────────────────────────────
+const QUEUE = [
+  { id:'CASE-4421', prio:'crit', age:'0.3h', prob:0.91, seg:'Mass', reason:'Card testing burst — BIN 652100–652199', linked:8, rec:'Block card + create BIN rule', customer:'Vijay Kumar ••••3901', sla:'0.7h remaining', slaColor:'var(--red)' },
+  { id:'CASE-4418', prio:'high', age:'1.2h', prob:0.73, seg:'Premium', reason:'High-value cross-border anomaly — UAE luxury spend', linked:1, rec:'App push challenge + analyst review', customer:'Sneha Agarwal ••••7743', sla:'0.8h remaining', slaColor:'var(--red)' },
+  { id:'CASE-4415', prio:'crit', age:'2.1h', prob:0.87, seg:'Mass', reason:'Impossible travel + ATM attempt post-CNP', linked:2, rec:'Block card immediately', customer:'Rahul Desai ••••2287', sla:'1.9h remaining', slaColor:'var(--amber)' },
+  { id:'CASE-4409', prio:'med', age:'3.8h', prob:0.54, seg:'Emerging', reason:'New device + cross-border digital goods spike', linked:3, rec:'Step-up authentication', customer:'Pooja Nair ••••6812', sla:'4.2h remaining', slaColor:'var(--text2)' },
+  { id:'CASE-4402', prio:'med', age:'5.4h', prob:0.61, seg:'Premium', reason:'Chargeback dispute — potential friendly fraud', linked:5, rec:'Review full transaction history', customer:'Aditya Sinha ••••5539', sla:'6.6h remaining', slaColor:'var(--text2)' },
+];
+
+// ─── ENGINE DATA ──────────────────────────────────────────────────────────────
+const ENGINE = {
+  grocery:{ title:'Domestic Grocery — Card Present', verdict:'APPROVED', score:8, color:'var(--green)', key:'grocery' },
+  digital:{ title:'Cross-Border Digital Goods — CNP, New Device', verdict:'DECLINED', score:84, color:'var(--red)', key:'digital' },
+  cardtest:{ title:'Card Testing Burst — Velocity Pattern', verdict:'DECLINED + TEMP BLOCK', score:78, color:'var(--red)', key:'cardtest' },
+  luxury:{ title:'High-Value Luxury — Ambiguous Signals', verdict:'MANUAL REVIEW', score:71, color:'var(--blue)', key:'luxury' },
+  atm:{ title:'ATM — Impossible Travel Detected', verdict:'HARD DECLINE + CARD BLOCKED', score:87, color:'var(--red)', key:'atm' },
+  travel:{ title:'HNI Traveller — Travel Flag Active', verdict:'APPROVED', score:22, color:'var(--green)', key:'travel' },
+};
+
+// ─── RENDERS ──────────────────────────────────────────────────────────────────
+let activeFilter = 'all';
+let txCounter = 8847301;
+
+function renderTxTable() {
+  const body = document.getElementById('txBody');
+  if (!body) return;
+  let rows = TXS;
+  if (activeFilter !== 'all') {
+    rows = TXS.filter(t => {
+      if (activeFilter==='approved') return t.decision==='approved';
+      if (activeFilter==='declined') return t.decision==='declined';
+      if (activeFilter==='challenge') return t.decision==='challenge';
+      if (activeFilter==='review') return t.decision==='review';
+      if (activeFilter==='cross-border') return t.flags.some(f=>f.includes('CROSS_BORDER'));
+      if (activeFilter==='high-risk') return t.score>=70;
+      if (activeFilter==='velocity') return t.flags.some(f=>f.includes('VEL')||f.includes('BURST'));
+      return true;
+    });
+  }
+  body.innerHTML = rows.map(t => {
+    const sc = t.score>=70?'var(--red)':t.score>=45?'var(--amber)':'var(--green)';
+    const db = {approved:'b-green',declined:'b-red',challenge:'b-amber',review:'b-blue'}[t.decision]||'b-gray';
+    const dl = {approved:'APPROVED',declined:'DECLINED',challenge:'CHALLENGE',review:'REVIEW'}[t.decision]||t.decision.toUpperCase();
+    const flagsHtml = t.flags.slice(0,2).map(f=>`<span class="badge ${f.includes('VEL')||f.includes('CARD_TEST')||f.includes('BURST')?'b-amber':f.includes('CROSS')||f.includes('GEO')||f.includes('NEW_DEV')?'b-red':'b-gray'}" style="font-size:9px;margin-right:2px">${f.replace(/_/g,' ')}</span>`).join('') + (t.flags.length>2?`<span style="font-size:9px;color:var(--text3)">+${t.flags.length-2}</span>`:'');
+    return `<tr onclick="openDetail('${t.key}','${t.id}','${t.merchant}','${t.amount}','${t.ts}','${t.decision}')">
+      <td class="mono muted" style="font-size:10.5px">${t.id}</td>
+      <td class="mono muted" style="font-size:10.5px">${t.ts}</td>
+      <td><span class="mono" style="font-size:11px">••••${t.card}</span><br><span style="font-size:10px;color:var(--text3)">${t.seg}</span></td>
+      <td class="bold mono">${t.amount}</td>
+      <td class="bold">${t.merchant}</td>
+      <td style="font-size:10.5px;color:var(--text2)">${t.mcc}</td>
+      <td><span class="badge b-gray">${t.channel}</span></td>
+      <td style="font-size:11px">${t.country}</td>
+      <td><div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${t.score}%;background:${sc}"></div></div><span class="sbar-val" style="color:${sc}">${t.score}</span></div></td>
+      <td>${flagsHtml}</td>
+      <td><span class="badge ${db}">${dl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTx(type, el) {
+  activeFilter = type;
+  document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('on','red','amber','green')});
+  el.classList.add('on');
+  if(type==='declined'||type==='high-risk') el.classList.add('red');
+  if(type==='approved') el.classList.add('green');
+  if(type==='challenge'||type==='velocity') el.classList.add('amber');
+  renderTxTable();
+}
+
+function openDetail(key, id, merchant, amount, ts, decision) {
+  const d = DETAIL[key];
+  if (!d) return;
+  const dm = {approved:{badge:'b-green',color:'var(--green)',label:'APPROVED',cls:'dec-approved'},declined:{badge:'b-red',color:'var(--red)',label:'DECLINED',cls:'dec-declined'},challenge:{badge:'b-amber',color:'var(--amber)',label:'CHALLENGE',cls:'dec-challenge'},review:{badge:'b-blue',color:'var(--blue)',label:'MANUAL REVIEW',cls:'dec-review'},blocked:{badge:'b-purple',color:'var(--purple)',label:'CARD BLOCKED',cls:'dec-blocked'}}[d.decision]||{badge:'b-gray',color:'var(--text)',label:'UNKNOWN',cls:''};
+  document.getElementById('dpTitle').textContent = merchant;
+  document.getElementById('dpId').textContent = `${id} · ${amount} · ${ts}`;
+  document.getElementById('dpBadge').innerHTML = `<span class="badge ${dm.badge}">${dm.label}</span>`;
+  const sc = d.score>=70?'var(--red)':d.score>=45?'var(--amber)':'var(--green)';
+  const rulesHtml = d.rules.length ? d.rules.map(r=>`<div style="font-family:var(--mono);font-size:10px;color:var(--amber);padding:3px 0;border-bottom:1px solid var(--border)">${r}</div>`).join('') : '<div style="font-size:11px;color:var(--text3)">No rules triggered</div>';
+  const posHtml = d.pos.map(p=>`<div class="sig-row"><span class="sig-name"><i class="ti ti-check" style="font-size:11px;color:var(--green)"></i>${p}</span><span style="color:var(--green);font-size:11px">✓</span></div>`).join('');
+  const negHtml = d.neg.map(n=>`<div class="sig-row"><span class="sig-name"><i class="ti ti-alert-triangle" style="font-size:11px;color:var(--red)"></i>${n}</span><span style="color:var(--red);font-size:11px">⚠</span></div>`).join('') || '<div style="font-size:11px;color:var(--text3)">No negative signals</div>';
+  const factHtml = d.factors.map(f=>`<div class="fbar-row"><div class="fbar-label">${f.l}</div><div class="fbar"><div class="fbar-fill ${f.t}" style="width:${f.v}%"></div></div><div class="fbar-wt">${f.v}%</div></div>`).join('');
+  const pipeHtml = d.pipe.map(p=>`<div class="pf-step"><div class="pf-box ${p.c}" style="min-width:80px"><span class="pf-lbl">${p.n}</span><span style="font-size:9px">${p.d}</span></div></div>`).join('');
+  const histHtml = d.hist.map(h=>`<div class="tl-item"><div class="tl-dot ${h.c}"></div><div class="tl-t">${h.t}</div><div class="tl-d" style="font-size:11.5px">${h.d}</div></div>`).join('');
+
+  // Support users see simplified view — no scores, no rule codes
+  const isSupport = currentPersona === 'support';
+  document.getElementById('dpBody').innerHTML = isSupport ? `
+    <div class="${dm.cls} dec-box">
+      <div class="dec-label" style="color:${dm.color}">${dm.label}</div>
+      <div class="dec-rationale" style="font-size:12px">${d.customerMsg}</div>
+    </div>
+    <div class="ds"><div class="ds-title">What happened</div><div style="font-size:12px;color:var(--text2);line-height:1.7">${d.headline}</div></div>
+    <div class="ds"><div class="ds-title">Customer message to read out</div><div class="script-box">${d.customerMsg}</div></div>
+    <div class="ds"><div class="ds-title">Resolution options</div>
+      <div class="q-acts">
+        <button class="act-btn genuine" onclick="showToast('Transaction whitelisted','Merchant added to trusted list for this customer')">Whitelist Merchant</button>
+        <button class="act-btn" onclick="showToast('Verification sent','OTP sent to customer')">Re-send Verification</button>
+        <button class="act-btn" onclick="showToast('Escalated to analyst','Case routed for analyst review')">Escalate to Fraud Team</button>
+      </div>
+    </div>` :
+  `<div class="${dm.cls} dec-box">
+    <div class="dec-label" style="color:${dm.color}">${dm.label}</div>
+    <div class="dec-rationale">${d.headline}</div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:14px">
+    <div style="text-align:center;background:var(--bg4);border-radius:var(--r);padding:9px 16px">
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">RISK SCORE</div>
+      <div style="font-size:24px;font-weight:600;font-family:var(--mono);color:${sc}">${d.score}</div>
+      <div style="font-size:9px;color:var(--text3)">/ 100</div>
+    </div>
+    <div style="text-align:center;background:var(--bg4);border-radius:var(--r);padding:9px 16px">
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">ML CONFIDENCE</div>
+      <div style="font-size:24px;font-weight:600;font-family:var(--mono)">${Math.round(d.conf*100)}%</div>
+    </div>
+    <div style="flex:1;background:var(--bg4);border-radius:var(--r);padding:9px 12px">
+      <div style="font-size:9px;color:var(--text3);margin-bottom:3px">DECISION RATIONALE</div>
+      <div style="font-size:11px;line-height:1.6;color:var(--text2)">${d.rationale}</div>
+    </div>
+  </div>
+  <div class="ds"><div class="ds-title">Decision Pipeline</div><div style="overflow-x:auto;padding:4px 0"><div style="display:flex;gap:5px;min-width:500px">${pipeHtml}</div></div></div>
+  <div class="ds"><div class="ds-title">Signal Contributions</div>${factHtml}</div>
+  <div class="ds"><div class="ds-title">Rules Triggered</div>${rulesHtml}</div>
+  <div class="ds"><div class="ds-title">Trust Signals</div>${posHtml || '<div style="font-size:11px;color:var(--text3)">None</div>'}</div>
+  <div class="ds"><div class="ds-title">Risk Signals</div>${negHtml}</div>
+  <div class="ds"><div class="ds-title">Cardholder History</div><div class="tl">${histHtml}</div></div>
+  <div class="ds">
+    <div class="ds-title">Messaging</div>
+    <div class="msg-card msg-ext" style="margin-bottom:8px"><div class="msg-lbl">Customer-safe message</div><div style="font-size:11.5px">${d.customerMsg}</div></div>
+    <div class="msg-card msg-int"><div class="msg-lbl">Internal analyst record</div><div class="mono" style="font-size:10px">${d.analystNote}</div></div>
+  </div>
+  <div class="ds"><div class="q-acts">
+    <button class="act-btn fraud" onclick="showToast('Confirmed fraud','Card block initiated')">Confirm Fraud</button>
+    <button class="act-btn genuine" onclick="showToast('Marked genuine','Transaction cleared')">Mark Genuine</button>
+    <button class="act-btn block" onclick="showToast('Card blocked','Temp block applied')">Block Card</button>
+    <button class="act-btn" onclick="showToast('Escalated','Routed to Tier-2')">Escalate</button>
+  </div></div>`;
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
+
+function renderQueue() {
+  const el = document.getElementById('queueList');
+  if (!el) return;
+  el.innerHTML = QUEUE.map(c=>`
+    <div class="q-item ${c.prio}">
+      <div class="q-top">
+        <span class="badge ${{crit:'b-red',high:'b-amber',med:'b-blue'}[c.prio]}">${{crit:'CRITICAL',high:'HIGH',med:'MEDIUM'}[c.prio]}</span>
+        <span class="q-title">${c.reason}</span>
+        <span style="font-size:9px;color:var(--text3);font-family:var(--mono)">${c.id}</span>
+      </div>
+      <div class="q-meta">
+        <span class="q-meta-i"><i class="ti ti-user" style="font-size:10px"></i>${c.customer}</span>
+        <span class="q-meta-i"><i class="ti ti-clock" style="font-size:10px"></i>Age: ${c.age}</span>
+        <span class="q-meta-i"><i class="ti ti-link" style="font-size:10px"></i>${c.linked} linked txns</span>
+        <span class="q-meta-i" style="color:${c.slaColor}"><i class="ti ti-stopwatch" style="font-size:10px"></i>SLA: ${c.sla}</span>
+        <span class="q-meta-i"><i class="ti ti-chart-bar" style="font-size:10px"></i>Fraud prob: <strong style="color:var(--red)">${Math.round(c.prob*100)}%</strong></span>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:6px"><i class="ti ti-bulb" style="font-size:11px;color:var(--amber)"></i> Recommended: <strong>${c.rec}</strong></div>
+      <div class="q-acts">
+        <button class="act-btn fraud" onclick="event.stopPropagation();showToast('Fraud confirmed','Card block initiated for ${c.customer}')">Confirm Fraud</button>
+        <button class="act-btn genuine" onclick="event.stopPropagation();showToast('Marked genuine','${c.id} cleared')">Mark Genuine</button>
+        <button class="act-btn block" onclick="event.stopPropagation();showToast('Card blocked','Temp block applied')">Block Card</button>
+        <button class="act-btn" onclick="event.stopPropagation();showToast('Escalated','Routed to Tier-2')">Escalate</button>
+        <button class="act-btn" onclick="event.stopPropagation();showToast('Verification sent','Customer outreach initiated')">Request Verification</button>
+      </div>
+    </div>`).join('');
+}
+
+function loadEngine(key, el) {
+  if (el) { document.querySelectorAll('#page-a-engine .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); }
+  const E = ENGINE[key]; const D = DETAIL[key];
+  if (!E || !D) return;
+  const sc = E.score>=70?'var(--red)':E.score>=45?'var(--amber)':'var(--green)';
+  const pipeHtml = D.pipe.map((p,i)=>`<div class="pf-step"><div class="pf-box ${p.c}" style="min-width:88px;text-align:left"><span class="pf-lbl">${['01 INGEST','02 ENRICH','03 RULES','04 ML SCORE','05 POLICY','06 FRICTION','07 DECISION'][i]||p.n}</span><div style="font-size:10px;margin:2px 0 2px">${p.n}</div><div class="pf-sub">${p.d}</div></div></div>`).join('');
+  document.getElementById('engineContent').innerHTML = `
+    <div class="card" style="margin-bottom:12px"><div class="card-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div><div style="font-size:13px;font-weight:500">${E.title}</div></div>
+        <div style="margin-left:auto;display:flex;gap:10px">
+          <div style="text-align:center;background:var(--bg4);border-radius:var(--r);padding:8px 14px"><div style="font-size:9px;color:var(--text3)">RISK SCORE</div><div style="font-size:22px;font-weight:600;font-family:var(--mono);color:${sc}">${E.score}</div></div>
+          <div style="background:${E.color}20;border:1px solid ${E.color}50;border-radius:var(--r);padding:8px 14px"><div style="font-size:9px;color:var(--text3)">VERDICT</div><div style="font-size:13px;font-weight:600;color:${E.color}">${E.verdict}</div></div>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;min-width:560px">${pipeHtml}</div></div>
+    </div></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px">
+      <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:7px">Pipeline step colours</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text2)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--cyan)"></span>Data enrichment</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--amber)"></span>Rule triggered / friction</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--purple)"></span>ML model</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--blue)"></span>Policy gate</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--red)"></span>Flagged / declined</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--green)"></span>Passed / approved</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:var(--bg4);border:1px solid var(--border2)"></span>Bypassed / N/A</span>
+      </div>
+    </div>`;
+}
+
+function loadSupportResults() {
+  const el = document.getElementById('supportResults');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px">Results for: <strong style="color:var(--text)">Pooja Nair · ••••6812</strong></div>
+    <div class="support-issue">
+      <div style="font-size:13px;font-weight:500;color:var(--red);margin-bottom:6px"><i class="ti ti-x-circle" style="font-size:14px;margin-right:6px"></i>Transaction Declined — ₹18,400 at SteamStore.com</div>
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:10px;line-height:1.6">We detected unusual activity on this transaction. It was from a device and location we had not seen before, and the type of purchase was unusual for this account. Our system automatically blocked it to protect the customer.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Time: 14:32:19 today · Channel: Online</div>
+      <div style="font-size:11.5px;font-weight:500;margin-bottom:6px">What to tell the customer:</div>
+      <div class="script-box">"Hi, I can see this transaction was declined as our system noticed it was from an unrecognised device in a different location than usual. This is an automatic safety measure to protect your account. If this was you, I can whitelist this merchant so you can try again."</div>
+      <div class="q-acts" style="margin-top:10px">
+        <button class="act-btn genuine" onclick="showToast('Merchant whitelisted','SteamStore.com added to trusted merchants for Pooja Nair')">Whitelist Merchant & Allow Retry</button>
+        <button class="act-btn" onclick="showToast('OTP sent','Verification OTP sent to registered mobile')">Send Verification OTP</button>
+        <button class="act-btn" onclick="showToast('Escalated','Case sent to fraud analyst team')">Escalate to Fraud Team</button>
+      </div>
+    </div>
+    <div class="support-challenge">
+      <div style="font-size:13px;font-weight:500;color:var(--amber);margin-bottom:6px"><i class="ti ti-shield" style="font-size:14px;margin-right:6px"></i>Challenge Sent — ₹8,400 at Zara.com (completed successfully)</div>
+      <div style="font-size:11.5px;color:var(--text2);line-height:1.6">A one-time password was sent and the customer completed verification. Transaction approved.</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Resolved automatically · No action needed</div>
+    </div>
+    <div class="support-resolved">
+      <div style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:6px"><i class="ti ti-check-circle" style="font-size:14px;margin-right:6px"></i>Recent Approvals (last 7 days)</div>
+      <div style="font-size:11.5px;color:var(--text2)">₹3,800 — Amazon.in · ₹1,200 — Myntra.com · ₹650 — Swiggy · ₹199 — Netflix (recurring) · All approved normally.</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;margin-top:4px">
+      <div style="font-size:11px;font-weight:500;margin-bottom:5px">Account Status</div>
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--text2)">
+        <span><span style="color:var(--green)">●</span> Card active</span>
+        <span><span style="color:var(--green)">●</span> No current block</span>
+        <span><span style="color:var(--green)">●</span> No open disputes</span>
+        <span><span style="color:var(--amber)">●</span> 1 declined txn today</span>
+      </div>
+    </div>`;
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+let leaderChartsInit = false;
+function initLeaderCharts() {
+  if (leaderChartsInit) return; leaderChartsInit = true;
+  const labels = Array.from({length:30},(_,i)=>`D${30-i}`);
+  new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets:[
+    {label:'Approval',data:labels.map((_,i)=>93+Math.sin(i*.3)*1.5+Math.random()*.4),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.04)',tension:.4,borderWidth:1.5,pointRadius:0},
+    {label:'Decline',data:labels.map((_,i)=>3.5+Math.cos(i*.4)*.8+Math.random()*.3),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.04)',tension:.4,borderWidth:1.5,pointRadius:0},
+    {label:'Challenge',data:labels.map((_,i)=>2+Math.sin(i*.5)*.6+Math.random()*.2),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.04)',tension:.4,borderWidth:1.5,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5568',font:{size:9},maxRotation:0,autoSkip:true},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}}}}});
+  new Chart(document.getElementById('lossChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[
+    {label:'Prevented',data:[3.1,3.8,4.2,3.6,4.8,4.2],backgroundColor:'rgba(34,197,94,.55)',borderColor:'#22c55e',borderWidth:1},
+    {label:'Loss',data:[.8,1.1,.9,1.4,1.0,1.2],backgroundColor:'rgba(239,68,68,.55)',borderColor:'#ef4444',borderWidth:1},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5568',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}}}}});
+}
+
+let impactChartInit = false;
+function initImpactChart() {
+  if (impactChartInit) return; impactChartInit = true;
+  new Chart(document.getElementById('tradeoffChart'),{type:'bubble',data:{datasets:[
+    {label:'Aggressive',data:[{x:92,y:3.8,r:11},{x:89,y:5.1,r:9},{x:94,y:3.2,r:8}],backgroundColor:'rgba(239,68,68,.6)'},
+    {label:'Current',data:[{x:87,y:.7,r:13}],backgroundColor:'rgba(245,158,11,.85)'},
+    {label:'Balanced',data:[{x:88,y:.4,r:11},{x:86,y:.3,r:9},{x:89,y:.45,r:8}],backgroundColor:'rgba(34,197,94,.6)'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Fraud Capture Rate (%)',color:'#4a5568',font:{size:10}},min:80,max:98,ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}},y:{title:{display:true,text:'False Positive Rate (%)',color:'#4a5568',font:{size:10}},min:0,max:7,ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}}}}});
+}
+
+// ─── RULES IMPACT ─────────────────────────────────────────────────────────────
+function onSlider() {
+  const a = parseInt(document.getElementById('sl-approve').value);
+  const c = parseInt(document.getElementById('sl-challenge').value);
+  const d = parseInt(document.getElementById('sl-decline').value);
+  document.getElementById('sv-approve').textContent = a;
+  document.getElementById('sv-challenge').textContent = c;
+  document.getElementById('sv-decline').textContent = d;
+  const dA = ((a-35)*.12) - ((80-d)*.15);
+  const dC = ((80-d)*.22) + ((35-a)*.08);
+  const dF = ((a-35)*.04) - ((80-d)*.01);
+  const dCh = (d-80)*15;
+  const dRv = (d-80)*8;
+  const fmt = (base,delta,sfx) => {
+    const n = (base+delta).toFixed(1);
+    const s = delta>=0?`<span class="ich pos">▲${Math.abs(delta.toFixed(1))}${sfx}</span>`:`<span class="ich neg">▼${Math.abs(delta.toFixed(1))}${sfx}</span>`;
+    return n+sfx+s;
+  };
+  document.getElementById('imp-a').innerHTML = fmt(94.2,dA,'%');
+  document.getElementById('imp-c').innerHTML = fmt(87.4,dC,'%');
+  document.getElementById('imp-f').innerHTML = fmt(0.7,dF,'%');
+  document.getElementById('imp-ch').innerHTML = Math.round(1840+dCh).toLocaleString('en-IN')+(dCh>0?`<span class="ich neg">▲${Math.abs(Math.round(dCh))}</span>`:`<span class="ich pos">▼${Math.abs(Math.round(dCh))}</span>`);
+  document.getElementById('imp-rv').innerHTML = Math.round(620+dRv).toLocaleString('en-IN')+(dRv>0?`<span class="ich neg">▲${Math.abs(Math.round(dRv))}</span>`:`<span class="ich pos">▼${Math.abs(Math.round(dRv))}</span>`);
+}
+
+// ─── SCENARIOS ────────────────────────────────────────────────────────────────
+const SCENARIOS = {normal:'Normal Operations',attack:'High Fraud Attack',travel:'Travel Season',holiday:'Holiday Ecommerce Spike',cardtest:'Card Testing Incident'};
+const SCENARIO_KPIS = {
+  normal:{approval:'94.2%',decline:'3.1%',stepup:'1.8%'},
+  attack:{approval:'88.4%',decline:'8.9%',stepup:'2.4%'},
+  travel:{approval:'95.8%',decline:'2.1%',stepup:'2.2%'},
+  holiday:{approval:'92.7%',decline:'4.8%',stepup:'3.1%'},
+  cardtest:{approval:'91.1%',decline:'6.2%',stepup:'1.4%'},
+};
+
+function openScenarioModal() { document.getElementById('scenarioModal').classList.add('open'); }
+
+function setScenario(s, el) {
+  document.querySelectorAll('.sc-opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('scenLabel').textContent = SCENARIOS[s];
+  document.getElementById('scenarioModal').classList.remove('open');
+  const k = SCENARIO_KPIS[s];
+  const kvApproval = document.getElementById('kv-approval');
+  const kvDecline = document.getElementById('kv-decline');
+  const kvStepup = document.getElementById('kv-stepup');
+  const ldApproval = document.getElementById('ld-approval');
+  if (kvApproval) kvApproval.textContent = k.approval;
+  if (kvDecline) kvDecline.textContent = k.decline;
+  if (kvStepup) kvStepup.textContent = k.stepup;
+  if (ldApproval) ldApproval.textContent = k.approval;
+  showToast('Scenario loaded', SCENARIOS[s]+' mode active');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(title, msg) {
+  document.getElementById('toastT').textContent = title;
+  document.getElementById('toastM').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ─── LIVE FEED ────────────────────────────────────────────────────────────────
+const EXTRA_TXS = [
+  {merchant:'Paytm',amount:'₹299',mcc:'6012 · Fintech',channel:'CNP · App',country:'IN',score:11,flags:[],decision:'approved',key:'normal'},
+  {merchant:'Booking.com',amount:'₹8,200',mcc:'7011 · Hotel',channel:'CNP · Ecom',country:'NL',score:54,flags:['CROSS_BORDER'],decision:'challenge',key:'normal'},
+  {merchant:'ATM — SBI',amount:'₹3,000',mcc:'6011 · ATM',channel:'ATM',country:'IN',score:18,flags:[],decision:'approved',key:'normal'},
+  {merchant:'Zepto',amount:'₹840',mcc:'5411 · Grocery',channel:'CNP · App',country:'IN',score:9,flags:[],decision:'approved',key:'normal'},
+  {merchant:'Binance.com',amount:'₹25,000',mcc:'6051 · Crypto',channel:'CNP · Ecom',country:'MT',score:89,flags:['CROSS_BORDER','MCC_HIGHRISK'],decision:'declined',key:'digital'},
+];
+
+setInterval(()=>{
+  const base = EXTRA_TXS[Math.floor(Math.random()*EXTRA_TXS.length)];
+  TXS.unshift({...base,id:`TXN-${txCounter++}`,ts:new Date().toLocaleTimeString('en-IN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}),card:String(Math.floor(Math.random()*9000+1000)),seg:['Mass','Emerging','Premium'][Math.floor(Math.random()*3)]});
+  if(TXS.length>30) TXS.pop();
+  if(currentPage==='a-feed') renderTxTable();
+  const el = document.getElementById('txRate');
+  if(el) el.textContent=(parseInt(el.textContent.replace(',',''))+(Math.floor(Math.random()*80+40))).toLocaleString('en-IN');
+}, 2800);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+switchPersona('analyst');
+</script>
+</body>
+</html>
